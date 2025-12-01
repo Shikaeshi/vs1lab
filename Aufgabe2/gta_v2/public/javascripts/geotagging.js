@@ -127,6 +127,12 @@ function updateLocation() {
     const lat = parseFloat(helper.latitude);
     const lng = parseFloat(helper.longitude);
 
+    document.getElementById("Latitude").value = lat;
+    document.getElementById("Longitude").value = lng;
+
+    document.getElementById("hidden-latitude").value = lat;
+    document.getElementById("hidden-longitude").value = lng;
+
     if (!window.mapManager) {
       window.mapManager = new MapManager();
     }
