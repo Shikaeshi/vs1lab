@@ -28,6 +28,7 @@ const GeoTag = require('../models/geotag');
  * 
  * TODO: implement the module in the file "../models/geotag-store.js"
  */
+
 // eslint-disable-next-line no-unused-vars
 const GeoTagStore = require('../models/geotag-store');
 
@@ -42,8 +43,21 @@ const GeoTagStore = require('../models/geotag-store');
 
 // TODO: extend the following route example if necessary
 router.get('/', (req, res) => {
-  res.render('index', { taglist: [] })
+    const store = req.app.locals.store;
+
+    // Standard-Koordinaten HKA (Platzhalter)
+    const lat = 49.01379;
+    const lon = 8.390071;
+
+    const nearbyTags = store.getNearbyGeoTags(lat, lon);
+
+    res.render('index', {
+        taglist: nearbyTags,
+        latitude: lat,
+        longitude: lon
+    });
 });
+
 
 /**
  * Route '/tagging' for HTTP 'POST' requests.
@@ -79,5 +93,53 @@ router.get('/', (req, res) => {
  */
 
 // TODO: ... your code here ...
+
+
+router.post('/tagging' , (req, res) => {
+    const store = req.app.locals.store; //zentraler GeoTag Store
+    const {Latitude, Longitude, PlaceName, Hashtag} = req.body; //Formulardaten aus dem Body
+
+    //Neue GeoTag Instanz erstellen
+    const lat = parseFloat(Latitude);
+    const lon = parseFloat(Longitude);
+    const newTag = new GeoTag(lat , lon , PlaceName, Hashtag || "");
+
+    //Neuen GeoTag im Store speichern
+    store.addGeoTag(newTag);
+
+    //Nahegelegene GeoTags abrufen
+    const nearbyTags = store.getNearbyGeoTags(lat, lon);
+
+    //Render die Seite mit den neuen GeoTags
+    res.render('index', {
+    taglist: nearbyTags,
+    latitude: parseFloat(Latitude),
+    longitude: parseFloat(Longitude)
+});
+
+
+});
+
+
+router.post('/discovery', (req, res) => {
+    const store = req.app.locals.store;
+    const { Latitude, Longitude, search } = req.body;
+
+    // Stelle sicher, dass Koordinaten Zahlen sind
+    const lat = parseFloat(Latitude);
+    const lon = parseFloat(Longitude);
+
+    // Suche Nearby Tags mit optionalem Keyword
+    const results = store.searchNearbyGeoTags(lat, lon, search, 10); // radius 10 wie vorher
+
+    // Render das Template mit den gefilterten Tags
+    res.render('index', {
+    taglist: results,
+    latitude: parseFloat(Latitude),
+    longitude: parseFloat(Longitude)
+});
+
+});
+
 
 module.exports = router;
