@@ -43,23 +43,44 @@ app.use(express.urlencoded({ extended: false }));
  */
 
 // TODO: ... your code here ...
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Set dedicated script for routing
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-    next(createError(404));
-  });
+app.use(function (req, res, next) {
+  next(createError(404));
+});
 
 // error handler
-app.use(function(err, req, res) {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};  
-    // render the error page
-    res.status(err.status || 500);
-    res.render('error');
-  });
+app.use(function (err, req, res) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
 
- module.exports = app;
+
+//push Example Tags in InMemoryGeoTagStore
+
+const GeoTag = require('./models/geotag');
+const InMemoryGeoTagStore = require('./models/geotag-store');
+const GeoTagExamples = require('./models/geotag-examples');
+
+// Store erzeugen
+const store = new InMemoryGeoTagStore();
+
+// Beispiel-Tags einfügen
+GeoTagExamples.tagList.forEach(([name, lat, lon, hashtag]) => {
+  store.addGeoTag(new GeoTag(lat, lon, name, hashtag));
+});
+
+// Store für alle Routen verfügbar machen
+app.locals.store = store;
+
+
+module.exports = app;

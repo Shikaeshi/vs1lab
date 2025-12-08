@@ -11,8 +11,20 @@
  */
 class GeoTag {
 
-    // TODO: ... your code here ...
-    
+    /**
+     * Constructor for a new GeoTag.
+     * @param {number} latitude Latitude of the location
+     * @param {number} longitude Longitude of the location
+     * @param {string} name Name of the place
+     * @param {string} hashtag Optional hashtag
+     */
+    constructor(latitude, longitude, name, hashtag = "") {
+        this.latitude = parseFloat(latitude);   // sicherstellen, dass es eine Zahl ist
+        this.longitude = parseFloat(longitude);
+        this.name = name;
+        this.hashtag = hashtag;
+    }
+
 }
 
 module.exports = GeoTag;

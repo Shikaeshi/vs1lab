@@ -25,7 +25,60 @@
  */
 class InMemoryGeoTagStore{
 
-    // TODO: ... your code here ...
+    constructor() {
+        this._geotags  = []; //private array for geotags
+    }
+    /** Add geotag to the store
+     * @param {*} geoTag  A geoTag Object
+     */
+
+    addGeoTag(geotag){
+        this._geotags.push(geotag);
+    }
+
+    /** Remove geotags by name
+     * @param {*} name Name to remove
+     */
+
+    removeGeoTag(name) {
+        this._geotags = this._geotags.filter(tag => tag.name !== name); //filter creates new array with all tags exept the one with name == name
+    }
+    /** 
+    * Returns all GeoTags in proximity of a given location.
+     * @param {*} latitude Latitude to search around
+     * @param {*} longitude Longitude to search around
+     * @param {*} radius Radius in degrees
+     * @returns Array of GeoTags
+     */
+    getNearbyGeoTags(latitude, longitude, radius = 10.01) {  
+        return this._geotags.filter(tag => {
+            const dx = Math.abs(tag.latitude - latitude);
+            const dy = Math.abs(tag.longitude - longitude);
+            return dx <= radius && dy <= radius;    //Wenn beide Differenzen kleiner oder gleich radius sind, ist der Tag nahe genug
+        });
+    }
+
+    /**
+     * Returns all GeoTags in proximity matching a given keyword.
+     * Partial matches in name OR hashtag.
+     * @param {*} latitude 
+     * @param {*} longitude 
+     * @param {*} keyword 
+     * @param {*} radius 
+     * @returns Array of GeoTags
+     */
+    searchNearbyGeoTags(latitude, longitude, keyword, radius = 0.01) {
+        const nearby = this.getNearbyGeoTags(latitude, longitude, radius);  //erst wird die obere funktion aufgerufen um alle nearby tags zu bekommen
+        if (!keyword || keyword.trim() === "") return nearby;               //Wenn keyword leer -> Gib alle zurück
+
+        const search = keyword.toLowerCase();                               // soll nicht case-sensitiv sein
+
+        return nearby.filter(tag => 
+            tag.name.toLowerCase().includes(search) ||                      //include sucht den Begriff in name oder hashtag
+            tag.hashtag.toLowerCase().includes(search)
+        );
+    }
+    
 
 }
 
