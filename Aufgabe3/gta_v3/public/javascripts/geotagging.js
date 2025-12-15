@@ -21,10 +21,24 @@ function updateLocation() {
   const hiddenLat = document.getElementById("hidden-latitude");
   const hiddenLng = document.getElementById("hidden-longitude");
 
+  const mapDiv = document.getElementById("map");
+  let tags = [];
+  const tagsData = mapDiv.getAttribute("data-tags");
+
+  if (tagsData) {
+    try {
+      tags = JSON.parse(tagsData);
+      console.log("Geladene Tags:", tags);
+    } catch (e) {
+      console.error("Fehler beim Parsen der GeoTags:", e);
+    }
+  }
+  
   // Prüfen, ob im Formular schon Koordinaten stehen
   const hasLat = latInput && latInput.value.trim() !== "";
   const hasLng = lngInput && lngInput.value.trim() !== "";
   console.log("hat schon Koordinaten?", hasLat, hasLng);
+
   // Falls beide Koordinaten schon da sind:
   if (hasLat && hasLng) {
     const lat = parseFloat(latInput.value);
@@ -38,28 +52,11 @@ function updateLocation() {
     // Karte auf aktuelle Position setzen
     window.mapManager.initMap(lat, lng);
 
-    // Aktuelle Position als Tag erstellen
-    const currentGeoTag = {
-      latitude: lat,
-      longitude: lng,
-      name: "Current position",
-    };
-
-    // Marker für die aktuelle Position setzen
-    window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
-
-    // Platzhalter-Bild und die dazugehörige Beschreibung (falls noch vorhanden) entfernen
-    const img =
-      document.querySelector(".discovery__map img") ||
-      document.querySelector("img");
-    if (img) {
-      const caption = img.nextElementSibling;
-      img.remove();
-      if (caption && caption.tagName && caption.tagName.toLowerCase() === "p") {
-        caption.remove();
-      }
-    }
-
+    // Array 'tags' als dritten Parameter übergeben
+    window.mapManager.updateMarkers(lat, lng, tags); 
+    
+    // Platzhalter entfernen
+    removePlaceholderImage();
     return;
   }
 
@@ -85,28 +82,22 @@ function updateLocation() {
     // Karte auf ermittelte Position setzen
     window.mapManager.initMap(lat, lng);
 
-    // Tag mit aktueller Position erstellen
-    const currentGeoTag = {
-      latitude: lat,
-      longitude: lng,
-      name: "Current position",
-    };
+    window.mapManager.updateMarkers(lat, lng, tags);
 
-    // Marker für die aktuelle Position und weitere Tags setzen.
-    window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
-
-    // Platzhalter-Bild und zugehörigen Text entfernen
-    const img =
-      document.querySelector(".discovery__map img") ||
-      document.querySelector("img");
-    if (img) {
-      const caption = img.nextElementSibling;
-      img.remove();
-      if (caption && caption.tagName && caption.tagName.toLowerCase() === "p") {
-        caption.remove();
-      }
-    }
+    // Platzhalter entfernen
+    removePlaceholderImage();
   });
+}
+
+function removePlaceholderImage() {
+  const img = document.querySelector(".discovery__map img") || document.querySelector("img");
+  if (img) {
+    const caption = img.nextElementSibling;
+    img.remove();
+    if (caption && caption.tagName && caption.tagName.toLowerCase() === "p") {
+      caption.remove();
+    }
+  }
 }
 
 // Wait for the page to fully load its DOM content, then call updateLocation
