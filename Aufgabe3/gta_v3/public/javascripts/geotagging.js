@@ -10,144 +10,99 @@
 console.log("The geoTagging script is going to start...");
 
 /**
- * A class to help using the HTML5 Geolocation API.
- */
-class LocationHelper {
-  // Location values for latitude and longitude are private properties to protect them from changes.
-  #latitude = "";
-
-  /**
-   * Getter method allows read access to privat location property.
-   */
-  get latitude() {
-    return this.#latitude;
-  }
-
-  #longitude = "";
-
-  get longitude() {
-    return this.#longitude;
-  }
-
-  /**
-   * Create LocationHelper instance if coordinates are known.
-   * @param {string} latitude
-   * @param {string} longitude
-   */
-  constructor(latitude, longitude) {
-    this.#latitude = parseFloat(latitude).toFixed(5);
-    this.#longitude = parseFloat(longitude).toFixed(5);
-  }
-
-  /**
-   * The 'findLocation' method requests the current location details through the geolocation API.
-   * It is a static method that should be used to obtain an instance of LocationHelper.
-   * Throws an exception if the geolocation API is not available.
-   * @param {*} callback a function that will be called with a LocationHelper instance as parameter, that has the current location details
-   */
-  static findLocation(callback) {
-    const geoLocationApi = navigator.geolocation;
-
-    if (!geoLocationApi) {
-      throw new Error("The GeoLocation API is unavailable.");
-    }
-
-    // Call to the HTML5 geolocation API.
-    // Takes a first callback function as argument that is called in case of success.
-    // Second callback is optional for handling errors.
-    // These callbacks are given as arrow function expressions.
-    geoLocationApi.getCurrentPosition(
-      (location) => {
-        // Create and initialize LocationHelper object.
-        let helper = new LocationHelper(
-          location.coords.latitude,
-          location.coords.longitude
-        );
-        // Pass the locationHelper object to the callback.
-        callback(helper);
-      },
-      (error) => {
-        alert(error.message);
-      }
-    );
-  }
-}
-
-/**
- * A class to help using the Leaflet map service.
- */
-class MapManager {
-  #map;
-  #markers;
-
-  /**
-   * Initialize a Leaflet map
-   * @param {number} latitude The map center latitude
-   * @param {number} longitude The map center longitude
-   * @param {number} zoom The map zoom, defaults to 18
-   */
-  initMap(latitude, longitude, zoom = 18) {
-    // set up dynamic Leaflet map
-    this.#map = L.map("map").setView([latitude, longitude], zoom);
-    var mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-    L.tileLayer("http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; " + mapLink + " Contributors",
-    }).addTo(this.#map);
-    this.#markers = L.layerGroup().addTo(this.#map);
-  }
-
-  /**
-   * Update the Markers of a Leaflet map
-   * @param {number} latitude The map center latitude
-   * @param {number} longitude The map center longitude
-   * @param {{latitude, longitude, name}[]} tags The map tags, defaults to just the current location
-   */
-  updateMarkers(latitude, longitude, tags = []) {
-    // delete all markers
-    this.#markers.clearLayers();
-    L.marker([latitude, longitude])
-      .bindPopup("Your Location")
-      .addTo(this.#markers);
-    for (const tag of tags) {
-      L.marker([tag.latitude, tag.longitude])
-        .bindPopup(tag.name)
-        .addTo(this.#markers);
-    }
-  }
-}
-
-/**
  * TODO: 'updateLocation'
  * A function to retrieve the current location and update the page.
  * It is called once the page has been fully loaded.
  */
 function updateLocation() {
+  const latInput = document.getElementById("Latitude");
+  const lngInput = document.getElementById("Longitude");
+
+  const hiddenLat = document.getElementById("hidden-latitude");
+  const hiddenLng = document.getElementById("hidden-longitude");
+
+  // Prüfen, ob im Formular schon Koordinaten stehen
+  const hasLat = latInput && latInput.value.trim() !== "";
+  const hasLng = lngInput && lngInput.value.trim() !== "";
+  console.log("hat schon Koordinaten?", hasLat, hasLng);
+  // Falls beide Koordinaten schon da sind:
+  if (hasLat && hasLng) {
+    const lat = parseFloat(latInput.value);
+    const lng = parseFloat(lngInput.value);
+
+    // MmapManager anlegen, falls noch nicht vorhanden
+    if (!window.mapManager) {
+      window.mapManager = new MapManager();
+    }
+
+    // Karte auf aktuelle Position setzen
+    window.mapManager.initMap(lat, lng);
+
+    // Aktuelle Position als Tag erstellen
+    const currentGeoTag = {
+      latitude: lat,
+      longitude: lng,
+      name: "Current position",
+    };
+
+    // Marker für die aktuelle Position setzen
+    window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
+
+    // Platzhalter-Bild und die dazugehörige Beschreibung (falls noch vorhanden) entfernen
+    const img =
+      document.querySelector(".discovery__map img") ||
+      document.querySelector("img");
+    if (img) {
+      const caption = img.nextElementSibling;
+      img.remove();
+      if (caption && caption.tagName && caption.tagName.toLowerCase() === "p") {
+        caption.remove();
+      }
+    }
+
+    return;
+  }
+
+  // Falls noch keine Koordinaten im Formular sind:
   // Hole aktuelle Position über LocationHelper
   LocationHelper.findLocation(function (helper) {
     const lat = parseFloat(helper.latitude);
     const lng = parseFloat(helper.longitude);
 
-    document.getElementById("Latitude").value = lat;
-    document.getElementById("Longitude").value = lng;
+    // Sichtbare Formularfelder mit den neuen Koordinaten füllen
+    latInput.value = lat;
+    lngInput.value = lng;
 
-    document.getElementById("hidden-latitude").value = lat;
-    document.getElementById("hidden-longitude").value = lng;
+    // Versteckte Felder mit neuen Koords füllen für Server
+    if (hiddenLat) hiddenLat.value = lat;
+    if (hiddenLng) hiddenLng.value = lng;
 
+    // MapManager anlegen, falls noch nicht vorhanden
     if (!window.mapManager) {
       window.mapManager = new MapManager();
     }
 
-    // Karte initialisieren und Marker setzen 
+    // Karte auf ermittelte Position setzen
     window.mapManager.initMap(lat, lng);
-    const currentGeoTag = { latitude: lat, longitude: lng, name: "Current position" };
+
+    // Tag mit aktueller Position erstellen
+    const currentGeoTag = {
+      latitude: lat,
+      longitude: lng,
+      name: "Current position",
+    };
+
+    // Marker für die aktuelle Position und weitere Tags setzen.
     window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
 
-    // Platzhalter-Bild und <p> entfernen
-    const img = document.querySelector('.discovery__map img') || document.querySelector('img');
+    // Platzhalter-Bild und zugehörigen Text entfernen
+    const img =
+      document.querySelector(".discovery__map img") ||
+      document.querySelector("img");
     if (img) {
       const caption = img.nextElementSibling;
       img.remove();
-      if (caption && caption.tagName && caption.tagName.toLowerCase() === 'p') {
+      if (caption && caption.tagName && caption.tagName.toLowerCase() === "p") {
         caption.remove();
       }
     }
@@ -157,4 +112,4 @@ function updateLocation() {
 // Wait for the page to fully load its DOM content, then call updateLocation
 document.addEventListener("DOMContentLoaded", () => {
   updateLocation();
-});//Test
+});
