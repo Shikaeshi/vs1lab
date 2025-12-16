@@ -127,7 +127,7 @@ router.post('/discovery', (req, res) => {
     const lon = parseFloat(Longitude);
 
     // Suche Nearby Tags mit optionalem Keyword
-    const results = store.searchNearbyGeoTags(lat, lon, search, 10); // radius 10 wie vorher
+    const results = store.searchNearbyGeoTags(lat, lon, search); // radius 10 wie vorher
 
     // Render das Template mit den gefilterten Tags
     res.render('index', {

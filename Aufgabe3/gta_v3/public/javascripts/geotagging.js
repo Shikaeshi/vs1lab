@@ -59,7 +59,6 @@ const currentGeoTag = {
 
     const allTags = [currentGeoTag, ...tags];
     // Marker für die aktuelle Position setzen
-    window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
     // Array 'tags' als dritten Parameter übergeben
     window.mapManager.updateMarkers(lat, lng, allTags); 
     
