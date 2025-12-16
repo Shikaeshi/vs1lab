@@ -51,9 +51,17 @@ function updateLocation() {
 
     // Karte auf aktuelle Position setzen
     window.mapManager.initMap(lat, lng);
+const currentGeoTag = {
+      latitude: lat,
+      longitude: lng,
+      name: "Current position",
+    };
 
+    const allTags = [currentGeoTag, ...tags];
+    // Marker für die aktuelle Position setzen
+    window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
     // Array 'tags' als dritten Parameter übergeben
-    window.mapManager.updateMarkers(lat, lng, tags); 
+    window.mapManager.updateMarkers(lat, lng, allTags); 
     
     // Platzhalter entfernen
     removePlaceholderImage();
@@ -78,11 +86,19 @@ function updateLocation() {
     if (!window.mapManager) {
       window.mapManager = new MapManager();
     }
+    const currentGeoTag = {
+      latitude: lat,
+      longitude: lng,
+      name: "Current position",
+    };
+    const allTags = [currentGeoTag, ...tags];
 
+    // Marker für die aktuelle Position setzen
+    //window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
     // Karte auf ermittelte Position setzen
     window.mapManager.initMap(lat, lng);
 
-    window.mapManager.updateMarkers(lat, lng, tags);
+    window.mapManager.updateMarkers(lat, lng, allTags);
 
     // Platzhalter entfernen
     removePlaceholderImage();
