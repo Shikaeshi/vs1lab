@@ -119,3 +119,4 @@ function removePlaceholderImage() {
 document.addEventListener("DOMContentLoaded", () => {
   updateLocation();
 });
+});
