@@ -50,11 +50,11 @@ class InMemoryGeoTagStore{
      * @param {*} radius Radius in degrees
      * @returns Array of GeoTags
      */
-    getNearbyGeoTags(latitude, longitude, radius = 10.01) {  
+    getNearbyGeoTags(latitude, longitude, radius = 0.1) {  
         return this._geotags.filter(tag => {
             const dx = Math.abs(tag.latitude - latitude);
             const dy = Math.abs(tag.longitude - longitude);
-            return Math.sqrt(dx * dx + dy * dy) <= radius;    //Wenn beide Differenzen kleiner oder gleich radius sind, ist der Tag nahe genug
+            return Math.sqrt(dx*dx + dy * dy) <= radius;    //Wenn beide Differenzen kleiner oder gleich radius sind, ist der Tag nahe genug
         });
     }
 

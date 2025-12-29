@@ -45,12 +45,13 @@ const GeoTagStore = require('../models/geotag-store');
 router.get('/', (req, res) => {
     const store = req.app.locals.store;
 
-    
-    
+    // Standard-Koordinaten HKA (Platzhalter)
+
+
     res.render('index', {
         taglist: [],
-        latitude: "",  
-        longitude 
+        latitude: "",
+        longitude: ""
     });
 });
 
@@ -126,7 +127,7 @@ router.post('/discovery', (req, res) => {
     const lon = parseFloat(Longitude);
 
     // Suche Nearby Tags mit optionalem Keyword
-    const results = store.searchNearbyGeoTags(lat, lon, search); 
+    const results = store.searchNearbyGeoTags(lat, lon, search); // radius 10 wie vorher
 
     // Render das Template mit den gefilterten Tags
     res.render('index', {
