@@ -27,21 +27,27 @@ class InMemoryGeoTagStore{
 
     constructor() {
         this._geotags  = []; //private array for geotags
+        this._nextId = 0;  //für eindeutige ID's
     }
     /** Add geotag to the store
      * @param {*} geoTag  A geoTag Object
      */
 
     addGeoTag(geotag){
+        geotag._id = this._nextId++;
         this._geotags.push(geotag);
+
+        return geotag;
     }
 
     /** Remove geotags by name
      * @param {*} name Name to remove
      */
 
-    removeGeoTag(name) {
-        this._geotags = this._geotags.filter(tag => tag.name !== name); //filter creates new array with all tags exept the one with name == name
+    removeGeoTag(id) {
+        const initialLength = this._geotags.length;
+        this._geotags = this._geotags.filter(tag => tag._id !== id);
+        return this._geotags.length < initialLength ;  //true wenn erfolgreich gelöscht wurde
     }
     /** 
     * Returns all GeoTags in proximity of a given location.
@@ -78,7 +84,20 @@ class InMemoryGeoTagStore{
             tag.hashtag.toLowerCase().includes(search)
         );
     }
+
+    getGeoTagById(id){
+        return this._geotags.find(tag => tag._id ===id);
+    }
     
+    updateGeoTag(id, updatedData) {
+        const index = this._geotags.findIndex(tag => tag._id === id);
+        if (index !== -1) {
+            // Behalte die ID bei, überschreibe den Rest
+            this._geotags[index] = { ...updatedData, _id: id };
+            return this._geotags[index];
+        }
+        return null;
+    }
 
 }
 

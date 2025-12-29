@@ -18,7 +18,7 @@ class GeoTag {
      * @param {string} name Name of the place
      * @param {string} hashtag Optional hashtag
      */
-    constructor(latitude, longitude, name, hashtag = "") { // hashtag ist optional
+    constructor(latitude, longitude, name, hashtag = "") {
         this.latitude = parseFloat(latitude);   // sicherstellen, dass es eine Zahl ist
         this.longitude = parseFloat(longitude);
         this.name = name;

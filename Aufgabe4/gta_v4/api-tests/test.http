@@ -1,0 +1,27 @@
+### 1. Einen neuen GeoTag erstellen
+POST http://localhost:3000/api/geotags
+Content-Type: application/json
+
+{
+    "name": "Schloss Karlsruhe",
+    "latitude": 49.013,
+    "longitude": 8.404,
+    "hashtag": "#karlsruhe"
+}
+
+### 2. Alle Tags abrufen (Suche)
+GET http://localhost:3000/api/geotags?searchterm=Schloss
+
+### 3. Einen Tag ändern 
+PUT http://localhost:3000/api/geotags/13
+Content-Type: application/json
+
+{
+    "name": "Schloss Karlsruhe - Update",
+    "latitude": 49.013,
+    "longitude": 8.404,
+    "hashtag": "#updated"
+}
+
+### 4. Einen Tag löschen
+DELETE http://localhost:3000/api/geotags/13
