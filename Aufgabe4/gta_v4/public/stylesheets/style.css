@@ -336,6 +336,14 @@ button:active {
   object-fit: cover;
 }
 
+/* Das ist entscheidend für Leaflet in Aufgabe 4 */
+#map {
+  height: 400px; /* Oder eine andere gewünschte Höhe */
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
 
 /* ### TODO ### Styles for Footer Component */
 /* ... your code here ... */
