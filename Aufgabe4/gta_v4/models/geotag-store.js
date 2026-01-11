@@ -56,7 +56,7 @@ class InMemoryGeoTagStore{
      * @param {*} radius Radius in degrees
      * @returns Array of GeoTags
      */
-    getNearbyGeoTags(latitude, longitude, radius = 0.1) {  
+    getNearbyGeoTags(latitude, longitude, radius = 1000.0) {  
         return this._geotags.filter(tag => {
             const dx = Math.abs(tag.latitude - latitude);
             const dy = Math.abs(tag.longitude - longitude);
@@ -73,7 +73,7 @@ class InMemoryGeoTagStore{
      * @param {*} radius 
      * @returns Array of GeoTags
      */
-    searchNearbyGeoTags(latitude, longitude, keyword, radius = 0.01) {
+    searchNearbyGeoTags(latitude, longitude, keyword, radius = 1000.0) {
         const nearby = this.getNearbyGeoTags(latitude, longitude, radius);  //erst wird die obere funktion aufgerufen um alle nearby tags zu bekommen
         if (!keyword || keyword.trim() === "") return nearby;               //Wenn keyword leer -> Gib alle zurück
 
