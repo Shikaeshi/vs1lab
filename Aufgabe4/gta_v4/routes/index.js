@@ -55,31 +55,49 @@ const GeoTagStore = require('../models/geotag-store');
  */
 
 // TODO: ... your code here ...
-   router.get('/api/geotags' , (req ,res) => {
-    const store = req.app.locals.store;
-    const searchterm = req.query.searchterm;
-    const latitude = parseFloat(req.query.latitude);
-    const longitude = parseFloat(req.query.longitude);
+   // Ersetze die bestehende GET /api/geotags Route:
+router.get('/api/geotags', (req, res) => {
+  const store = req.app.locals.store;
+  const searchterm = req.query.searchterm;
+  const latitude = parseFloat(req.query.latitude);
+  const longitude = parseFloat(req.query.longitude);
+  
+  // **PAGINATION PARAMETER**
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const offset = (page - 1) * limit;
 
-    let result;
+  let result;
 
-    if(!isNaN(latitude) && !isNaN(longitude)) {
-      result = store.searchNearbyGeoTags(latitude, longitude, searchterm);
+  if (!isNaN(latitude) && !isNaN(longitude)) {
+    result = store.searchNearbyGeoTags(latitude, longitude, searchterm);
+  }
+  else if (searchterm) {
+    result = store._geotags.filter(tag => 
+      tag.name.toLowerCase().includes(searchterm.toLowerCase()) ||
+      tag.hashtag.toLowerCase().includes(searchterm.toLowerCase())
+    );
+  }
+  else {
+    result = store._geotags;
+  }
+
+  // **PAGINATION ANWENDEN**
+  const total = result.length;
+  const paginated = result.slice(offset, offset + limit);
+  const totalPages = Math.ceil(total / limit);
+
+  res.json({
+    tags: paginated,
+    pagination: {
+      current: page,
+      pages: totalPages,
+      total: total,
+      limit: limit
     }
-    //Es wird nach dem Begriff gefiltert
-    else if (searchterm){
-         result = store._geotags.filter(tag => 
-            tag.name.toLowerCase().includes(searchterm.toLowerCase()) ||
-            tag.hashtag.toLowerCase().includes(searchterm.toLowerCase())
-         );
-    }
-    else {
-      result = store._geotags;
-    }
+  });
+});
 
-    res.json(result);
-
-   })
 
 /**
  * Route '/api/geotags' for HTTP 'POST' requests.

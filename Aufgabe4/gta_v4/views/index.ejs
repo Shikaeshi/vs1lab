@@ -104,8 +104,13 @@
                                 <%= gtag.name %> ( <%= gtag.latitude %>,<%= gtag.longitude %>) <%= gtag.hashtag %>
                             </li>
                             <% }); %>
-
                     </ul>
+                    <!-- Pagination Controls -->
+                    <div class="discovery__pagination" id="paginationControls" style="display: none;">
+                    <button id="prevPage" class="pagination-btn" disabled>&lt;</button>
+                    <div id="pageNumbers" class="page-numbers"></div>
+                    <button id="nextPage" class="pagination-btn" disabled>&gt;</button>
+                    </div>
                 </div>
 
                 <div id="map" class="discovery__map" data-tags='<%- JSON.stringify(taglist || []) %>'>
