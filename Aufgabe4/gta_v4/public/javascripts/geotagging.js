@@ -51,7 +51,7 @@ function updateLocation() {
 
     // Karte auf aktuelle Position setzen
     window.mapManager.initMap(lat, lng);
-const currentGeoTag = {
+    const currentGeoTag = {
       latitude: lat,
       longitude: lng,
       name: "Current position",
@@ -59,7 +59,7 @@ const currentGeoTag = {
 
     const allTags = [currentGeoTag, ...tags];
     // Marker für die aktuelle Position setzen
-    // Array 'tags' als dritten Parameter übergeben
+    // Array "tags" als dritten Parameter übergeben
     window.mapManager.updateMarkers(lat, lng, allTags); 
     
     // Platzhalter entfernen
@@ -92,11 +92,11 @@ const currentGeoTag = {
     };
     const allTags = [currentGeoTag, ...tags];
 
-    // Marker für die aktuelle Position setzen
-    //window.mapManager.updateMarkers(lat, lng, [currentGeoTag]);
+    
+    
     // Karte auf ermittelte Position setzen
     window.mapManager.initMap(lat, lng);
-
+    // Marker für die aktuelle Position setzen
     window.mapManager.updateMarkers(lat, lng, allTags);
 
     // Platzhalter entfernen
@@ -115,7 +115,138 @@ function removePlaceholderImage() {
   }
 }
 
-// Wait for the page to fully load its DOM content, then call updateLocation
+// Discovery Widget + Map filtern
+function updateDiscoveryWidget(tags) {
+  const resultsList = document.getElementById("discoveryResults");
+  resultsList.innerHTML = ""; // Liste leeren
+
+  // Liste mit gefilterten Tags füllen
+  tags.forEach(gtag => {
+    const li = document.createElement("li");
+    li.textContent = `${gtag.name} (${gtag.latitude},${gtag.longitude}) ${gtag.hashtag}`;
+    resultsList.appendChild(li);
+  });
+
+  // Map mit gefilterten Tags aktualisieren 
+  const lat = parseFloat(document.getElementById("Latitude").value);
+  const lng = parseFloat(document.getElementById("Longitude").value);
+  
+  if (window.mapManager) {
+    // Nur die gefilterten Tags anzeigen
+    window.mapManager.updateMarkers(lat, lng, tags); 
+  }
+}
+
+// Formular-Handler
+function handleTaggingSubmit(event) {
+  event.preventDefault();
+  console.log("=== TAGGING START ===");
+
+  const nameInput = document.getElementById("PlaceName");
+  const hashtagInput = document.getElementById("Hashtag");
+  const namePattern = /^[A-Za-z]{1,10}$/;
+  
+  if (!namePattern.test(nameInput.value)) {
+    alert("Name muss 1-10 Buchstaben enthalten!");
+    return;
+  }
+
+  const geoTagData = {
+    latitude: parseFloat(document.getElementById("Latitude").value),
+    longitude: parseFloat(document.getElementById("Longitude").value),
+    name: nameInput.value,
+    hashtag: hashtagInput.value
+  };
+  
+  console.log("GeoTag zum Senden:", geoTagData);
+
+  fetch('/api/geotags', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(geoTagData)
+  })
+  .then(response => {
+    console.log("POST Response Status:", response.status);
+    console.log("POST Response OK:", response.ok);
+    
+    if (!response.ok) {
+      return response.text().then(text => {
+        console.error("Server Error Response:", text);
+        throw new Error(`Server Fehler ${response.status}: ${text}`);
+      });
+    }
+    return response.json();
+  })
+  .then(newTag => {
+    console.log('GeoTag erfolgreich erstellt:', newTag);
+    document.getElementById("PlaceName").value = "";
+    document.getElementById("Hashtag").value = "";
+    return fetchDiscoveryTags();
+  })
+  .then(tags => {
+    console.log("Tags nach Tagging:", tags);
+    updateDiscoveryWidget(tags);
+  })
+  .catch(error => {
+    console.error('Tagging Fehler:', error);
+    alert('Fehler beim Erstellen: ' + error.message);
+  });
+}
+
+// Discovery Formular-Handler
+function handleDiscoverySubmit(event) {
+  event.preventDefault();
+  console.log("=== DISCOVERY START ===");
+  
+  fetchDiscoveryTags()
+    .then(tags => {
+      console.log("Discovery Tags empfangen:", tags);
+      updateDiscoveryWidget(tags);
+    })
+    .catch(error => {
+      console.error('Discovery Fehler:', error);
+    });
+}
+
+// Funktion zum Abrufen der GeoTags vom Server mit Filtern
+function fetchDiscoveryTags() {
+  const lat = document.getElementById("hidden-latitude").value;
+  const lng = document.getElementById("hidden-longitude").value;
+  const searchTerm = document.getElementById("search").value;
+
+  const params = new URLSearchParams();
+  if (lat) params.append('latitude', lat);
+  if (lng) params.append('longitude', lng);
+  if (searchTerm) params.append('searchterm', searchTerm);
+
+  const url = `/api/geotags?${params.toString()}`;
+  console.log("Discovery URL:", url);
+  
+  return fetch(url)
+    .then(response => {
+      console.log("Discovery Response Status:", response.status);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    });
+}
+
+
+// Event Listener registrieren (nach DOM laden)
 document.addEventListener("DOMContentLoaded", () => {
   updateLocation();
+
+  // OPTIONAL: Initial alle Tags laden
+  /*fetchDiscoveryTags()
+    .then(updateDiscoveryWidget);
+  */
+
+  // Tagging Formular
+  const tagForm = document.getElementById("tag-form");
+  tagForm.addEventListener("submit", handleTaggingSubmit);
+
+  // Discovery Formular
+  const discoveryForm = document.getElementById("discoveryFilterForm");
+  discoveryForm.addEventListener("submit", handleDiscoverySubmit);
 });
