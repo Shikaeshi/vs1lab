@@ -283,6 +283,12 @@ function fetchDiscoveryTags() {
 document.addEventListener("DOMContentLoaded", () => {
   updateLocation();
 
+  // direkt alle GeoTags laden
+  currentPage = 1;                // Pagination auf Seite 1
+  fetchDiscoveryTags()
+    .then(updateDiscoveryWidget)
+    .catch(console.error);
+
   const tagForm = document.getElementById("tag-form");
   tagForm.addEventListener("submit", handleTaggingSubmit);
 
