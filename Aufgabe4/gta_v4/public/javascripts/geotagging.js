@@ -91,9 +91,7 @@ function updateLocation() {
       name: "Current position",
     };
     const allTags = [currentGeoTag, ...tags];
-
-    
-    
+   
     // Karte auf ermittelte Position setzen
     window.mapManager.initMap(lat, lng);
     // Marker für die aktuelle Position setzen
@@ -115,29 +113,75 @@ function removePlaceholderImage() {
   }
 }
 
-// Discovery Widget + Map filtern
-function updateDiscoveryWidget(tags) {
-  const resultsList = document.getElementById("discoveryResults");
-  resultsList.innerHTML = ""; // Liste leeren
+// Pagination: Aufgabe 4.3 
+let currentPage = 1;
+const itemsPerPage = 5;
 
-  // Liste mit gefilterten Tags füllen
-  tags.forEach(gtag => {
+function updateDiscoveryWidget(data) {  
+  const resultsList = document.getElementById("discoveryResults");
+  resultsList.innerHTML = "";
+
+  data.tags.forEach(gtag => {  
     const li = document.createElement("li");
     li.textContent = `${gtag.name} (${gtag.latitude},${gtag.longitude}) ${gtag.hashtag}`;
     resultsList.appendChild(li);
   });
 
-  // Map mit gefilterten Tags aktualisieren 
+  createPaginationControls(data.pagination.pages);  
+
   const lat = parseFloat(document.getElementById("Latitude").value);
   const lng = parseFloat(document.getElementById("Longitude").value);
   
   if (window.mapManager) {
-    // Nur die gefilterten Tags anzeigen
-    window.mapManager.updateMarkers(lat, lng, tags); 
+    const currentGeoTag = { latitude: lat, longitude: lng, name: "Current position" };
+    const allTags = [currentGeoTag, ...data.tags];  
+    window.mapManager.updateMarkers(lat, lng, allTags);
   }
 }
 
-// Formular-Handler
+// Pagination Controls erstellen
+function createPaginationControls(pages) {  
+  const controls = document.getElementById('paginationControls');
+  const pageNumbers = document.getElementById('pageNumbers');
+  
+  if (!controls) return;
+  
+  pageNumbers.innerHTML = '';
+  
+  if (pages <= 1) {
+    controls.style.display = 'none';
+    return;
+  }
+  
+  controls.style.display = 'flex';
+  
+  document.getElementById('prevPage').disabled = currentPage === 1;
+  document.getElementById('prevPage').onclick = () => {
+    if (currentPage > 1) changePage(currentPage - 1);
+  };
+  
+  for (let i = 1; i <= pages; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'page-number';
+    btn.textContent = i;
+    if (i === currentPage) btn.classList.add('active');
+    btn.onclick = () => changePage(i);
+    pageNumbers.appendChild(btn);
+  }
+  
+  document.getElementById('nextPage').disabled = currentPage === pages;
+  document.getElementById('nextPage').onclick = () => {
+    if (currentPage < pages) changePage(currentPage + 1);
+  };
+}
+
+function changePage(page) {  
+  currentPage = page;
+  fetchDiscoveryTags()
+    .then(updateDiscoveryWidget)
+    .catch(console.error);
+}
+
 function handleTaggingSubmit(event) {
   event.preventDefault();
   console.log("=== TAGGING START ===");
@@ -183,11 +227,13 @@ function handleTaggingSubmit(event) {
     console.log('GeoTag erfolgreich erstellt:', newTag);
     document.getElementById("PlaceName").value = "";
     document.getElementById("Hashtag").value = "";
+    
+    currentPage = 1;  
     return fetchDiscoveryTags();
   })
-  .then(tags => {
-    console.log("Tags nach Tagging:", tags);
-    updateDiscoveryWidget(tags);
+  .then(data => {  
+    console.log("Tags nach Tagging:", data);
+    updateDiscoveryWidget(data);
   })
   .catch(error => {
     console.error('Tagging Fehler:', error);
@@ -195,22 +241,21 @@ function handleTaggingSubmit(event) {
   });
 }
 
-// Discovery Formular-Handler
 function handleDiscoverySubmit(event) {
   event.preventDefault();
   console.log("=== DISCOVERY START ===");
   
+  currentPage = 1;  
   fetchDiscoveryTags()
-    .then(tags => {
-      console.log("Discovery Tags empfangen:", tags);
-      updateDiscoveryWidget(tags);
+    .then(data => {  
+      console.log("Discovery Tags empfangen:", data);
+      updateDiscoveryWidget(data);
     })
     .catch(error => {
       console.error('Discovery Fehler:', error);
     });
 }
 
-// Funktion zum Abrufen der GeoTags vom Server mit Filtern
 function fetchDiscoveryTags() {
   const lat = document.getElementById("hidden-latitude").value;
   const lng = document.getElementById("hidden-longitude").value;
@@ -220,6 +265,9 @@ function fetchDiscoveryTags() {
   if (lat) params.append('latitude', lat);
   if (lng) params.append('longitude', lng);
   if (searchTerm) params.append('searchterm', searchTerm);
+  
+  params.append('page', currentPage);  
+  params.append('limit', itemsPerPage); 
 
   const url = `/api/geotags?${params.toString()}`;
   console.log("Discovery URL:", url);
@@ -232,21 +280,12 @@ function fetchDiscoveryTags() {
     });
 }
 
-
-// Event Listener registrieren (nach DOM laden)
 document.addEventListener("DOMContentLoaded", () => {
   updateLocation();
 
-  // OPTIONAL: Initial alle Tags laden
-  /*fetchDiscoveryTags()
-    .then(updateDiscoveryWidget);
-  */
-
-  // Tagging Formular
   const tagForm = document.getElementById("tag-form");
   tagForm.addEventListener("submit", handleTaggingSubmit);
 
-  // Discovery Formular
   const discoveryForm = document.getElementById("discoveryFilterForm");
   discoveryForm.addEventListener("submit", handleDiscoverySubmit);
 });
